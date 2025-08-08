@@ -18,25 +18,25 @@ def generate_generic_event(id):
   return {
       "attribute": 
       {
-        "specversion": "1.0",
-        "id": int(id) * 5,
-        "source": "urn:exads:ads/bidder",
-        "type": "click",
-        "datacontenttype": "application/json",
+        "specversion": ''.join(random.choices(string.ascii_letters + string.digits, k=5)),
+        "id": str(uuid.uuid4()),
+        "source":''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+        "type": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+        "datacontenttype": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
         "time": datetime.now().strftime("%H:%M:%S"),
         "payload": b"\x01\x10"
       },
       "data": {
         "id": int(id),
-        "country": "US",
-        "device": 1,
-        "zone": 42,
-        "pricing_model": 3,
-        "bid_floor": 0.5,
-        "smart_price": 0.75,
-        "winning_price": 0.8,
-        "event_type": 0,
-        "network": 5
+        "country": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+        "device": random.randint(0, 100),
+        "zone": random.randint(0, 100),
+        "pricing_model": random.randint(0, 100),
+        "bid_floor": random.uniform(0, 100),
+        "smart_price": random.uniform(0, 100),
+        "winning_price": random.uniform(0, 100),
+        "event_type": random.randint(0, 100),
+        "network": random.randint(0, 100)
       } 
   }
 
@@ -44,26 +44,26 @@ def generate_larger_generic_event(id):
   return {
       "attribute": 
       {
-        "specversion": "1.0",
+        "specversion":  ''.join(random.choices(string.ascii_letters + string.digits, k=5)),
         "id": str(uuid.uuid4()),
-        "source": "urn:exads:ads/bidder",
-        "type": "click",
-        "datacontenttype": "application/json",
+        "source": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+        "type": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+        "datacontenttype": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
         "time": datetime.now().strftime("%H:%M:%S"),
-        "payload": b"\x01\x10",
-        "processed": True,
-        "priority": 5,
-        "region": "us-west",
-        "retry": False,
-        "payload_type": "json",
-        "checksum": b"\x9f\x8c\x7a",
+        "payload": random.randbytes(8),
+        "processed": random.randint(0, 1),
+        "priority": random.randint(0, 100),
+        "region": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+        "retry": random.randint(0, 1),
+        "payload_type": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+        "checksum": random.randbytes(8),
         "error_code": None
       },
       "data": {
         "id": int(id),
-        "country": "US",
-        "device": 1,
-        "zone": 42,
+        "country": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+        "device": random.randint(0, 100),
+        "zone": random.randint(0, 100),
         "data_string": {
           "value": {
             "random_string": ''.join(random.choices(string.ascii_letters + string.digits, k=300)) # create a 300-character long random string 
@@ -71,57 +71,57 @@ def generate_larger_generic_event(id):
         },
         "data_json": {
           "value": {
-                "is_active": True,
-                "user_id": 12345,
-                "price": 99.99,
+                "is_active": random.randint(0, 1),
+                "user_id": str(uuid.uuid4()),
+                "price": random.uniform(0, 100),
                 "username": "user_example",
-                "is_verified": False,
-                "age": 30,
-                "discount_rate": 0.15,
+                "is_verified": random.randint(0, 1),
+                "age": random.randint(0, 100),
+                "discount_rate": random.uniform(0, 100),
                 "email": "user@example.com",
-                "has_premium": True,
-                "rating": 4.7,
-                "login_attempts": 5,
-                "account_balance": 1500.75,
-                "country": "US",
-                "subscription_level": "gold",
-                "notifications_enabled": False,
-                "last_login_days_ago": 2,
-                "max_storage_gb": 100,
-                "cpu_cores": 8,
-                "temperature_celsius": 23.5,
-                "favorite_color": "blue",
-                "email_verified": True,
-                "items_in_cart": 3,
-                "session_time_minutes": 45.2,
-                "bio": "Loves coding and coffee",
-                "is_admin": False,
-                "posts_count": 128,
-                "average_response_time": 0.342,
-                "timezone": "UTC-5",
-                "notifications_count": 12,
-                "is_beta_user": True
+                "has_premium": random.randint(0, 1),
+                "rating": random.uniform(0, 100),
+                "login_attempts": random.randint(0, 100),
+                "account_balance": random.uniform(0, 100),
+                "country": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+                "subscription_level": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+                "notifications_enabled": random.randint(0, 1),
+                "last_login_days_ago": random.randint(0, 100),
+                "max_storage_gb": random.randint(0, 100),
+                "cpu_cores": random.randint(0, 100),
+                "temperature_celsius": random.uniform(0, 100),
+                "favorite_color": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+                "email_verified": random.randint(0, 1),
+                "items_in_cart": random.randint(0, 1),
+                "session_time_minutes": random.uniform(0, 100),
+                "bio": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+                "is_admin": random.randint(0, 1),
+                "posts_count": random.randint(0, 100),
+                "average_response_time": random.uniform(0, 100),
+                "timezone": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+                "notifications_count": random.randint(0, 100),
+                "is_beta_user": random.randint(0, 1)
             }
         },
-        "pricing_model": 3,
-        "bid_floor": 0.5,
-        "smart_price": 0.75,
-        "winning_price": 0.8,
-        "event_type": 0,
-        "network": 5,
+        "pricing_model": random.randint(0, 100),
+        "bid_floor": random.uniform(0, 100),
+        "smart_price": random.uniform(0, 100),
+        "winning_price": random.uniform(0, 100),
+        "event_type": random.randint(0, 100),
+        "network": random.randint(0, 100),
         "cloud_event_data": {
            "value": {
                "data": [
                   {
                     "value": {
                       "key1": None,
-                      "key2": True,
-                      "key3": 42.0,
-                      "key4": "example string",
+                      "key2": random.randint(0, 1),
+                      "key3": random.uniform(0, 100),
+                      "key4": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
                       "key5": {
                         "nestedKey": {
                           "value": {
-                            "innerKey": "innerValue"
+                            "innerKey": ''.join(random.choices(string.ascii_letters + string.digits, k=300))
                           }
                         }
                       }
@@ -129,8 +129,8 @@ def generate_larger_generic_event(id):
                   },
                   {
                     "value": {
-                      "anotherKey": "anotherValue",
-                      "number": 3.14
+                      "anotherKey": ''.join(random.choices(string.ascii_letters + string.digits, k=300)),
+                      "number": random.uniform(0, 100)
                     }
                   },
                 ]
