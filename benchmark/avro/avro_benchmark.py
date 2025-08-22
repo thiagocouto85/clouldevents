@@ -9,9 +9,12 @@ import json
 import uuid
 from datetime import datetime
 
+simple_message = []
+large_message = []
+
 # Avro Event Format for CloudEvents
 # https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/formats/avro-format.md
-with open("benchmark/avro/cloudevents.avsc", "r") as f:
+with open("cloudevents.avsc", "r") as f:
     schema = avro.schema.parse(f.read())
 
 def generate_generic_event(id):
@@ -146,15 +149,22 @@ def serialize(user):
   writer.write(user, encoder)
   return buffer.getvalue()
 
-def run(num_messages=10000):
+def create_messages(num_messages=10000):
+    for i in range(num_messages):
+      simple_message.append(generate_generic_event(i))
+
+    for i in range(num_messages):
+      large_message.append(generate_larger_generic_event(i))
+
+def run():
   print("\nStarting simple event with messages ...\n")
   total_size = 0
   start_time = time.time()
   tracemalloc.start()
 
+  num_messages = len(simple_message)
   for i in range(num_messages):
-    event = generate_generic_event(i)
-    avro_bytes = serialize(event)
+    avro_bytes = serialize(simple_message[i])
     total_size += len(avro_bytes)
 
   current, peak = tracemalloc.get_traced_memory()
@@ -176,9 +186,9 @@ def run(num_messages=10000):
   start_time = time.time()
   tracemalloc.start()
 
+  num_messages = len(large_message)
   for i in range(num_messages):
-    event = generate_larger_generic_event(i)
-    avro_bytes = serialize(event)
+    avro_bytes = serialize(large_message[i])
     total_size += len(avro_bytes)
 
   current, peak_large = tracemalloc.get_traced_memory()
@@ -195,5 +205,6 @@ def run(num_messages=10000):
   print("\nEnding larger event ...\n")
 
 if __name__ == "__main__":
-  run(1000)
+  create_messages(10)
+  run()
 

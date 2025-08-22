@@ -2,12 +2,15 @@ import json
 from cloudevents_pb2 import CloudEvent
 from google.protobuf import timestamp_pb2
 from google.protobuf.any_pb2 import Any
-from datetime import datetime
+from datetime import datetime, UTC
 import time
 import tracemalloc
 import uuid
 import random
 import string
+
+simple_message = []
+large_message = []
 
 def create_cloud_event(id):
     event = CloudEvent()
@@ -21,7 +24,7 @@ def create_cloud_event(id):
 
     # Optional and Extension Attributes
     ts = timestamp_pb2.Timestamp()
-    ts.FromDatetime(datetime.utcnow())
+    ts.FromDatetime(datetime.now(UTC))
     attr_val_ts = CloudEvent.CloudEventAttributeValue()
     attr_val_ts.ce_timestamp.CopyFrom(ts)
     event.attributes["time"].CopyFrom(attr_val_ts)
@@ -70,7 +73,7 @@ def create_cloud_event_large(id):
     event.attributes["count"].CopyFrom(attr_val_int)
 
     ts = timestamp_pb2.Timestamp()
-    ts.FromDatetime(datetime.utcnow())
+    ts.FromDatetime(datetime.now(UTC))
     attr_val_ts = CloudEvent.CloudEventAttributeValue()
     attr_val_ts.ce_timestamp.CopyFrom(ts)
     event.attributes["time"].CopyFrom(attr_val_ts)
@@ -189,19 +192,33 @@ def create_cloud_event_large(id):
     
     return event
 
+def create_messages(num_messages=10000):
+    # create simple message
+    for i in range(num_messages):
+      simple_message.append(create_cloud_event(i))
 
-def main(num_messages=10000):
+    # create large message
+    for i in range(num_messages):
+      large_message.append(create_cloud_event_large(i))
+
+def run():
     print("\nStarting simple event ...\n")
     total_size = 0
     start_time = time.time()
     tracemalloc.start()
 
+    num_messages = len(simple_message)
     for i in range(num_messages):
-        cloud_event = create_cloud_event(i)
         # SerializeToString(): serializes the message and returns it as a string. 
         # Note that the bytes are binary, not text; we only use the str type as a convenient container.
+        
+        # No need for BytesIO or separate encoder/decoder like Avro.
+        # messages have SerializeToString() and ParseFromString() built in.
+        # Works for any nested messages, repeated fields, etc.
+
         # https://protobuf.dev/getting-started/pythontutorial/
-        avro_bytes = cloud_event.SerializeToString()
+        avro_bytes = simple_message[i].SerializeToString()
+        print(avro_bytes)
         total_size += len(avro_bytes)
 
     current, peak = tracemalloc.get_traced_memory()
@@ -223,12 +240,16 @@ def main(num_messages=10000):
     start_time = time.time()
     tracemalloc.start()
 
+    num_messages = len(large_message)
     for i in range(num_messages):
-        cloud_event = create_cloud_event_large(i)
         # SerializeToString(): serializes the message and returns it as a string. 
         # Note that the bytes are binary, not text; we only use the str type as a convenient container.
         # https://protobuf.dev/getting-started/pythontutorial/
-        avro_bytes = cloud_event.SerializeToString()
+
+        # No need for BytesIO or separate encoder/decoder like Avro.
+        # messages have SerializeToString() and ParseFromString() built in.
+        # Works for any nested messages, repeated fields, etc.
+        avro_bytes = large_message[i].SerializeToString()
         total_size += len(avro_bytes)
 
     current, peak = tracemalloc.get_traced_memory()
@@ -246,4 +267,5 @@ def main(num_messages=10000):
   
 # https://protobuf.dev/
 if __name__ == "__main__":
-    main(1000)
+    create_messages(2)
+    run()
