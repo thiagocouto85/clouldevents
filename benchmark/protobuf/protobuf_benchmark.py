@@ -218,7 +218,6 @@ def run():
 
         # https://protobuf.dev/getting-started/pythontutorial/
         avro_bytes = simple_message[i].SerializeToString()
-        print(avro_bytes)
         total_size += len(avro_bytes)
 
     current, peak = tracemalloc.get_traced_memory()
@@ -267,5 +266,5 @@ def run():
   
 # https://protobuf.dev/
 if __name__ == "__main__":
-    create_messages(2)
+    create_messages(100000)
     run()

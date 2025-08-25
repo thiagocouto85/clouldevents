@@ -43,7 +43,7 @@ def generate_generic_event(id):
       } 
   }
 
-def generate_larger_generic_event(id):
+def generate_large_generic_event(id):
   return {
       "attribute": 
       {
@@ -154,7 +154,7 @@ def create_messages(num_messages=10000):
       simple_message.append(generate_generic_event(i))
 
     for i in range(num_messages):
-      large_message.append(generate_larger_generic_event(i))
+      large_message.append(generate_large_generic_event(i))
 
 def run():
   print("\nStarting simple event with messages ...\n")
@@ -181,7 +181,7 @@ def run():
   
   print("\n...............................................................\n")
 
-  print("\nStarting larger event with messages...\n")
+  print("\nStarting large event with messages...\n")
   total_size = 0
   start_time = time.time()
   tracemalloc.start()
@@ -202,9 +202,9 @@ def run():
   print(f"Avg time per message: {elapsed_large / num_messages * 1000:.4f} ms")
   print(f"Peak memory usage: {peak_large / 1024:.2f} KB")
 
-  print("\nEnding larger event ...\n")
+  print("\nEnding large event ...\n")
 
 if __name__ == "__main__":
-  create_messages(10)
+  create_messages(100000)
   run()
 
