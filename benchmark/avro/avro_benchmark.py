@@ -1,4 +1,6 @@
 import avro.schema
+from avro.datafile import DataFileReader, DataFileWriter
+from avro.io import DatumReader, DatumWriter
 import avro.io
 import io
 import random
@@ -14,8 +16,11 @@ large_message = []
 
 # Avro Event Format for CloudEvents
 # https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/formats/avro-format.md
+with open("cloudevents_batch.avsc", "r") as f:
+    schema_batch = avro.schema.parse(f.read())
+
 with open("cloudevents.avsc", "r") as f:
-    schema = avro.schema.parse(f.read())
+    schema_sequencial = avro.schema.parse(f.read())
 
 def generate_generic_event(id):
   return {
@@ -142,12 +147,18 @@ def generate_large_generic_event(id):
       } 
   }
 
-def serialize(user):
+def serialize(events, schema):
   buffer = io.BytesIO()
-  encoder = avro.io.BinaryEncoder(buffer)
   writer = avro.io.DatumWriter(schema)
-  writer.write(user, encoder)
+  encoder = avro.io.BinaryEncoder(buffer)
+  writer.write(events, encoder)
   return buffer.getvalue()
+
+def deserialize(serialized_bytes, schema):
+    buffer = io.BytesIO(serialized_bytes)
+    decoder = avro.io.BinaryDecoder(buffer)
+    reader = avro.io.DatumReader(schema)
+    return reader.read(decoder)
 
 def create_messages(num_messages=10000):
     for i in range(num_messages):
@@ -156,17 +167,97 @@ def create_messages(num_messages=10000):
     for i in range(num_messages):
       large_message.append(generate_large_generic_event(i))
 
-def run():
-  print("\nStarting simple event with messages ...\n")
+
+def batch_execution_simple_messages():
+    print("\nStarting serialize batch event with simple messages ...\n")
+    start_time = time.time()
+    tracemalloc.start()
+
+    batch_dict = {"events": simple_message}
+    data = serialize(batch_dict, schema_batch)
+    total_size = len(data)
+
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {len(simple_message)}")
+    print(f"Total size: {total_size / 1024:.2f} KB")
+    print(f"Avg size per message: {total_size / len(simple_message):.2f} bytes")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Avg time per message: {elapsed / len(simple_message) * 1000:.4f} ms")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding serialize batch event with simple messages ...\n")
+
+    print("\nStarting decode batch event with simple messages ...\n")
+    start_time = time.time()
+    tracemalloc.start()
+
+    decoded = deserialize(data, schema_batch)
+    total_size = len(decoded)
+   
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {len(simple_message)}")
+    print(f"Total size: {total_size / 1024:.2f} KB")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding decode batch event with simple messages ...\n")
+
+
+def batch_execution_large_messages():
+    print("\nStarting serialize batch event with large messages ...\n")
+    start_time = time.time()
+    tracemalloc.start()
+
+    batch_dict = {"events": large_message}
+    data = serialize(batch_dict, schema_batch)
+    total_size = len(data)
+
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {len(large_message)}")
+    print(f"Total size: {total_size / 1024:.2f} KB")
+    print(f"Avg size per message: {total_size / len(large_message):.2f} bytes")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Avg time per message: {elapsed / len(large_message) * 1000:.4f} ms")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding serialize batch event with large messages ...\n")
+
+    print("\nStarting decode batch event with large messages ...\n")
+    start_time = time.time()
+    tracemalloc.start()
+
+    decoded = deserialize(data, schema_batch)
+    total_size = len(decoded)
+   
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {len(large_message)}")
+    print(f"Total size: {total_size / 1024:.2f} KB")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding decode batch event with large messages ...\n")
+
+def sequencial_execution_simple_messages():
+  simple_message_serialized = []
+  print("\nStarting serialize sequencial event with simple messages ...\n")
   total_size = 0
   start_time = time.time()
   tracemalloc.start()
 
   num_messages = len(simple_message)
   for i in range(num_messages):
-    avro_bytes = serialize(simple_message[i])
+    avro_bytes = serialize(simple_message[i], schema_sequencial)
+    simple_message_serialized.append(avro_bytes)
     total_size += len(avro_bytes)
-
+  
   current, peak = tracemalloc.get_traced_memory()
   tracemalloc.stop()
   elapsed = time.time() - start_time
@@ -177,18 +268,36 @@ def run():
   print(f"Time taken: {elapsed:.4f} seconds")
   print(f"Avg time per message: {elapsed / num_messages * 1000:.4f} ms")
   print(f"Peak memory usage: {peak / 1024:.2f} KB")
-  print("\nEnding simple event ...\n")
-  
-  print("\n...............................................................\n")
+  print("\nEnding serialize sequencial event with simple messages...\n")
 
-  print("\nStarting large event with messages...\n")
+  print("\nStarting decode sequencial event with simple messages ...\n")
+  start_time = time.time()
+  tracemalloc.start()
+  num_messages_serialized = len(simple_message_serialized)
+  for i in range(num_messages_serialized):
+      deserialize(simple_message_serialized[i], schema_sequencial)
+
+  current, peak = tracemalloc.get_traced_memory()
+  tracemalloc.stop()
+  elapsed = time.time() - start_time
+
+  print(f"Messages processed: {num_messages}")
+  print(f"Time taken: {elapsed:.4f} seconds")
+  print(f"Peak memory usage: {peak / 1024:.2f} KB")
+  print("\nEnding decode sequencial event with simple messages ...\n")
+
+def sequencial_execution_large_messages():
+  large_message_serialized = []
+
+  print("\nStarting serialize sequencial event with large messages...\n")
   total_size = 0
   start_time = time.time()
   tracemalloc.start()
 
   num_messages = len(large_message)
   for i in range(num_messages):
-    avro_bytes = serialize(large_message[i])
+    avro_bytes = serialize(large_message[i], schema_sequencial)
+    large_message_serialized.append(avro_bytes)
     total_size += len(avro_bytes)
 
   current, peak_large = tracemalloc.get_traced_memory()
@@ -202,9 +311,34 @@ def run():
   print(f"Avg time per message: {elapsed_large / num_messages * 1000:.4f} ms")
   print(f"Peak memory usage: {peak_large / 1024:.2f} KB")
 
-  print("\nEnding large event ...\n")
+  print("\nEnding serialize sequencial event with large messages...\n")
+
+  print("\nStarting decode sequencial event with large messages...\n")
+  start_time = time.time()
+  tracemalloc.start()
+
+  num_messages = len(large_message_serialized)
+  for i in range(num_messages):
+    deserialize(large_message_serialized[i], schema_sequencial)
+
+  current, peak_large = tracemalloc.get_traced_memory()
+  tracemalloc.stop()
+  elapsed_large = time.time() - start_time
+
+  print(f"Messages processed: {num_messages}")
+  print(f"Time taken: {elapsed_large:.4f} seconds")
+  print(f"Peak memory usage: {peak_large / 1024:.2f} KB")
+
+  print("\nEnding decode sequencial event with large messages ...\n")
+
+def run():
+  batch_execution_simple_messages()
+  batch_execution_large_messages()
+  sequencial_execution_simple_messages()
+  sequencial_execution_large_messages()
+  
 
 if __name__ == "__main__":
-  create_messages(100000)
+  create_messages(10)
   run()
 

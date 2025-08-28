@@ -1,5 +1,5 @@
 import json
-from cloudevents_pb2 import CloudEvent
+from cloudevents_pb2 import CloudEvent, CloudEventBatch
 from google.protobuf import timestamp_pb2
 from google.protobuf.any_pb2 import Any
 from datetime import datetime, UTC
@@ -201,8 +201,92 @@ def create_messages(num_messages=10000):
     for i in range(num_messages):
       large_message.append(create_cloud_event_large(i))
 
-def run():
-    print("\nStarting simple event ...\n")
+def batch_execution_simple_messages():
+    print("\nStarting serialize batch event with simple messages ...\n")
+    start_time = time.time()
+    tracemalloc.start()
+    wrapper = CloudEventBatch(events = simple_message)
+
+    # Serialize all at once
+    data = wrapper.SerializeToString()  
+    total_size = len(data)
+   
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {len(simple_message)}")
+    print(f"Total size: {total_size / 1024:.2f} KB")
+    print(f"Avg size per message: {total_size / len(simple_message):.2f} bytes")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Avg time per message: {elapsed / len(simple_message) * 1000:.4f} ms")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding serialize event with simple messages ...\n")
+
+    print("\nStarting decode batch event with simple messages ...\n")
+    start_time = time.time()
+    tracemalloc.start()
+
+    data_serialized = CloudEventBatch()
+    data_serialized.ParseFromString(data)
+
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {len(simple_message)}")
+    print(f"Total size: {total_size / 1024:.2f} KB")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding decode event with simple messages ...\n")
+
+
+def batch_execution_large_messages():
+    print("\nStarting serialize batch event with large messages ...\n")
+    start_time = time.time()
+    tracemalloc.start()
+    wrapper = CloudEventBatch(events = large_message)
+
+    # Serialize all at once
+    data = wrapper.SerializeToString()  
+    total_size = len(data)
+   
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {len(large_message)}")
+    print(f"Total size: {total_size / 1024:.2f} KB")
+    print(f"Avg size per message: {total_size / len(large_message):.2f} bytes")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Avg time per message: {elapsed / len(large_message) * 1000:.4f} ms")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding serialize event with large messages ...\n")
+
+    print("\nStarting decode batch event with large messages ...\n")
+    start_time = time.time()
+    tracemalloc.start()
+
+    data_serialized = CloudEventBatch()
+    data_serialized.ParseFromString(data)
+
+    total_size = len(data)
+   
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {len(large_message)}")
+    print(f"Total size: {total_size / 1024:.2f} KB")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding decode batch event with large messages ...\n")
+
+
+def sequencial_execution_simple_message():
+    simple_message_serialized = []
+
+    print("\nStarting serialize sequencial event with simple messages ...\n")
     total_size = 0
     start_time = time.time()
     tracemalloc.start()
@@ -217,8 +301,9 @@ def run():
         # Works for any nested messages, repeated fields, etc.
 
         # https://protobuf.dev/getting-started/pythontutorial/
-        avro_bytes = simple_message[i].SerializeToString()
-        total_size += len(avro_bytes)
+        message_bytes = simple_message[i].SerializeToString()
+        simple_message_serialized.append(message_bytes)
+        total_size += len(message_bytes)
 
     current, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
@@ -230,11 +315,30 @@ def run():
     print(f"Time taken: {elapsed:.4f} seconds")
     print(f"Avg time per message: {elapsed / num_messages * 1000:.4f} ms")
     print(f"Peak memory usage: {peak / 1024:.2f} KB")
-    print("\nEnding simple event ...\n")
-    
-    print("\n...............................................................\n")
+    print("\nEnding serialize sequencial event with simple messages ...\n")
 
-    print("\nStarting large event ...\n")
+    print("\nStarting decode sequencial event with simple messages ...\n")
+    total_size = 0
+    start_time = time.time()
+    tracemalloc.start()
+
+    num_messages = len(simple_message_serialized)
+    for i in range(num_messages):
+        msg = CloudEvent()
+        msg.ParseFromString(simple_message_serialized[i])
+
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {num_messages}")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding decode sequencial event with simple messages ...\n")
+
+def sequencial_execution_large_message():
+    large_message_serialized = []
+    print("\nStarting serialize event with large messages ...\n")
     total_size = 0
     start_time = time.time()
     tracemalloc.start()
@@ -248,8 +352,9 @@ def run():
         # No need for BytesIO or separate encoder/decoder like Avro.
         # messages have SerializeToString() and ParseFromString() built in.
         # Works for any nested messages, repeated fields, etc.
-        avro_bytes = large_message[i].SerializeToString()
-        total_size += len(avro_bytes)
+        message_bytes = large_message[i].SerializeToString()
+        large_message_serialized.append(message_bytes)
+        total_size += len(message_bytes)
 
     current, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
@@ -261,10 +366,36 @@ def run():
     print(f"Time taken: {elapsed:.4f} seconds")
     print(f"Avg time per message: {elapsed / num_messages * 1000:.4f} ms")
     print(f"Peak memory usage: {peak / 1024:.2f} KB")
-    print("\nEnding large event ...\n")
+    print("\nEnding serialize event with large messages ...\n")
+
+    print("\nStarting decode event with large messages ...\n")
+    total_size = 0
+    start_time = time.time()
+    tracemalloc.start()
+
+    num_messages = len(large_message_serialized)
+    for i in range(num_messages):
+        msg = CloudEvent()
+        msg.ParseFromString(large_message_serialized[i])
+
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    elapsed = time.time() - start_time
+
+    print(f"Messages processed: {num_messages}")
+    print(f"Time taken: {elapsed:.4f} seconds")
+    print(f"Peak memory usage: {peak / 1024:.2f} KB")
+    print("\nEnding decode event with large messages ...\n")
+    
+
+def run():
+    sequencial_execution_simple_message()
+    sequencial_execution_large_message()
+    batch_execution_simple_messages()
+    batch_execution_large_messages()
 
   
 # https://protobuf.dev/
 if __name__ == "__main__":
-    create_messages(100000)
+    create_messages(10)
     run()
