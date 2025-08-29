@@ -10,8 +10,8 @@ docker-compose up --build
 ```Avro
  Active venv running the command: source venv/bin/activate
 
-```Excution
- python3 avro_benchmark.py
- python3 protobuf_benchmark.py
+ Commands to execute
+ - python3 avro_benchmark.py
+ - python3 protobuf_benchmark.py
 
 
