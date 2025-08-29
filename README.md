@@ -1,17 +1,17 @@
+# Project Title
+
+This Benchmark is implemented to compare the perfomance between Avro and Protobuf
+
+
+## 📦 Steps for run the Benchmark
+
 docker-compose up --build      
 
-docker-compose run python_app python benchmark/avro/avro_benchmark.py
+```Avro
+ Active venv running the command: source venv/bin/activate
 
-docker-compose run python_app python benchmark/protobuf/protobuf_benchmark.py
-
-
-
-
-add pb2 manually  protoc --proto_path=benchmark/protobuf --python_out=benchmark/protobuf benchmark/protobuf/cloudevents.proto
-
-
-
-Avro
-# active  -> source venv/bin/activate
+```Excution
+ python3 avro_benchmark.py
+ python3 protobuf_benchmark.py
 
 
