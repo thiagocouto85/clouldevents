@@ -8,7 +8,7 @@ This Benchmark is implemented to compare the perfomance between Avro and Protobu
 docker-compose up --build      
 
 ```Avro
- Active venv running the command: source venv/bin/activate
+ Active venv into avro directory running the command: source venv/bin/activate
 
  Commands to execute
  - python3 avro_benchmark.py
